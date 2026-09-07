@@ -132,7 +132,7 @@ export default async function DashboardPage() {
                   <CardContent className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 text-xs font-semibold bg-blue-50 text-blue-700 rounded-md">
+                        <span className="px-2.5 py-0.5 text-xs font-semibold bg-yellow-50 text-yellow -700 rounded-md">
                           {item.course.courseCode}
                         </span>
                         <h4 className="font-semibold text-slate-800 text-base">{item.course.courseName}</h4>

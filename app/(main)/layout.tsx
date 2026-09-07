@@ -47,7 +47,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
               />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-slate-900 md:text-md tracking-tight group-hover:text-yellow-600 transition-colors">
+              <span className="font-bold text-slate-900 hidden md:block md:text-md tracking-tight group-hover:text-yellow-600 transition-colors">
                 ระบบลงทะเบียนเรียน
               </span>
               <span className="text-[16px] font-medium text-slate-400">

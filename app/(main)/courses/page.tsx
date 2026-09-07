@@ -49,10 +49,11 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
         {/* Search Header Banner */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-4">
           <div className="space-y-1">
+            <div className="flex items-center justify-center"><BookOpen className="w-10 h-10 text-yellow-600 md:hidden" /></div>
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-yellow-600" /> ค้นหารายวิชาสำหรับลงทะเบียน
+              <BookOpen className="w-5 h-5 text-yellow-600 hidden md:block" /> <span className="text-center md:text-left">ค้นหารายวิชาสำหรับลงทะเบียน</span>
             </h2>
-            <p className="text-sm text-slate-500">พิมพ์รหัสวิชา (เช่น CSI101) หรือชื่อวิชาเพื่อกรองข้อมูลรายวิชาที่ต้องการ[cite: 1]</p>
+            <p className="text-sm text-slate-500">พิมพ์รหัสวิชา (เช่น CSI101) หรือชื่อวิชาเพื่อกรองข้อมูลรายวิชาที่ต้องการ</p>
           </div>
 
           <form method="GET" className="flex gap-2">
@@ -102,7 +103,7 @@ export default async function CoursesPage({ searchParams }: { searchParams: Prom
 
               return (
                 <Card key={course.id} className="border-slate-200/60 shadow-sm hover:shadow-md transition-all">
-                  <CardHeader className="flex flex-row items-start justify-between pb-3">
+                  <CardHeader className="flex flex-col md:flex-row items-start justify-between pb-3">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 text-lg font-semibold bg-yellow-50 text-yellow-700 rounded-md">

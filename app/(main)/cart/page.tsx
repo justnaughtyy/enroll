@@ -36,7 +36,7 @@ export default async function CartPage() {
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
               <ShoppingCart className="w-5 h-5 text-yellow-600" /> รายการวิชาในตะกร้าของคุณ
             </h2>
-            <p className="text-sm text-slate-500">จัดการรายวิชาหรือกดยืนยันเพื่อบันทึกผลการลงทะเบียนเรียน[cite: 1]</p>
+            <p className="text-sm text-slate-500">จัดการรายวิชาหรือกดยืนยันเพื่อบันทึกผลการลงทะเบียนเรียน</p>
           </div>
 
           <div className="bg-yellow-50 border border-yellow-100 px-4 py-3 rounded-xl flex items-center gap-3">
@@ -45,7 +45,7 @@ export default async function CartPage() {
             </div>
             <div>
               <p className="text-xs text-yellow-600 font-medium">หน่วยกิตรวมในตะกร้า</p>
-              <p className="text-lg font-bold text-yellow-900">{totalCredits} / 22 <span className="text-xs font-normal text-yellow-700">หน่วยกิต</span>[cite: 1]</p>
+              <p className="text-lg font-bold text-yellow-900">{totalCredits} / 22 <span className="text-xs font-normal text-yellow-700">หน่วยกิต</span></p>
             </div>
           </div>
         </div>

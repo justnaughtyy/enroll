@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { toast } from "sonner" 
 
 export default function LoginForm() {
   const router = useRouter()
@@ -26,15 +27,30 @@ export default function LoginForm() {
       const data = await res.json()
 
       if (!res.ok) {
-        alert(data.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ")
+        // ❌ แก้เป็น toast.error สำหรับกรณีรหัสผิดหรือหาผู้ใช้ไม่เจอ
+        toast.error("เข้าสู่ระบบไม่สำเร็จ", {
+          description: data.message || "รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง",
+        })
         setLoading(false)
         return
       }
 
-      router.push("/dashboard")
-      router.refresh()
+      // ✅ เพิ่ม toast.success แจ้งเตือนเมื่อล็อกอินผ่าน
+      toast.success("เข้าสู่ระบบสำเร็จ!", {
+        description: "กำลังพาท่านเข้าสู่ระบบลงทะเบียน...",
+      })
+
+      // ใช้ setTimeout หน่วงเวลา 1 วินาที เพื่อให้ผู้ใช้มองเห็น Pop-up สีเขียวก่อนเปลี่ยนหน้า
+      setTimeout(() => {
+        router.push("/dashboard")
+        router.refresh()
+      }, 1000)
+
     } catch (err) {
-      alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้")
+      // ❌ เปลี่ยนจาก alert() แบบเก่า เป็น Pop-up สวยๆ
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ", {
+        description: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง",
+      })
       setLoading(false)
     }
   }
@@ -49,6 +65,7 @@ export default function LoginForm() {
           value={studentId} 
           onChange={(e) => setStudentId(e.target.value)} 
           required 
+          className="h-11" // เพิ่มความสูงให้ช่องกรอกดูโปร่งขึ้นนิดนึง
         />
       </div>
       <div className="space-y-1">
@@ -60,9 +77,10 @@ export default function LoginForm() {
           value={password} 
           onChange={(e) => setPassword(e.target.value)} 
           required 
+          className="h-11"
         />
       </div>
-      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
+      <Button type="submit" className="w-full h-11 mt-2 bg-blue-600 hover:bg-blue-700 transition-colors" disabled={loading}>
         {loading ? "กำลังตรวจสอบ..." : "เข้าสู่ระบบ"}
       </Button>
     </form>
