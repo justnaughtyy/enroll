@@ -1,59 +1,65 @@
-import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import { NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
+import jwt from "jsonwebtoken"
+import bcrypt from "bcrypt" // ✅ นำเข้า bcrypt
 
-const prisma = new PrismaClient()
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json()
-    const { studentId, password } = body
+    const { studentId, password } = await req.json()
 
-    // 1. ตรวจสอบว่าส่งข้อมูลมาครบไหม
-    if (!studentId || !password) {
-      return NextResponse.json({ message: 'กรุณากรอกรหัสนักศึกษาและรหัสผ่าน' }, { status: 400 })
-    }
-
-    // 2. ค้นหานักศึกษาในฐานข้อมูลด้วยรหัสนักศึกษา
-    const student = await prisma.student.findUnique({
-      where: { studentId },
+    // 1. ค้นหาผู้ใช้จาก username (รหัสนักศึกษา หรือ รหัสอาจารย์/แอดมิน)
+    const user = await prisma.user.findUnique({
+      where: { username: studentId } 
     })
 
-    if (!student) {
-      return NextResponse.json({ message: 'ไม่พบรหัสนักศึกษานี้ในระบบ' }, { status: 404 })
+    // 2. ถ้าไม่พบผู้ใช้ ให้ดีดกลับทันที
+    if (!user) {
+      return NextResponse.json(
+        { message: "รหัสผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง" }, 
+        { status: 401 }
+      )
     }
 
-    // 3. นำรหัสผ่านที่กรอก มาเทียบกับรหัสผ่านที่ Hash ไว้ในฐานข้อมูล
-    const passwordMatch = await bcrypt.compare(password, student.password)
-
-    if (!passwordMatch) {
-      return NextResponse.json({ message: 'รหัสผ่านไม่ถูกต้อง' }, { status: 401 })
+    // 3. ✅ ตรวจสอบรหัสผ่านที่ถูก Hash ไว้ด้วย bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.password)
+    
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { message: "รหัสผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง" }, 
+        { status: 401 }
+      )
     }
 
-    // 4. สร้าง JWT Token (บัตรผ่าน)
-    const secret = process.env.JWT_SECRET || 'secret123'
+    // 4. สร้าง Token พร้อมแนบ Role
+    const secret = process.env.JWT_SECRET || "secret123"
     const token = jwt.sign(
-      { id: student.id, studentId: student.studentId },
+      { 
+        userId: user.id, 
+        username: user.username, 
+        name: user.name, 
+        role: user.role 
+      },
       secret,
-      { expiresIn: '1d' } // ให้บัตรผ่านมีอายุ 1 วัน
+      { expiresIn: "1d" }
     )
 
-    // 5. ส่ง Response กลับไปพร้อมกับแนบ Token ลงใน Cookie
-    const response = NextResponse.json({ message: 'เข้าสู่ระบบสำเร็จ' }, { status: 200 })
+    const response = NextResponse.json({ 
+      message: "เข้าสู่ระบบสำเร็จ", 
+      role: user.role 
+    })
     
-    response.cookies.set({
-      name: 'token',
-      value: token,
-      httpOnly: true, // ป้องกันการถูกขโมยผ่าน JavaScript
-      path: '/',
-      maxAge: 60 * 60 * 24, // 1 วัน
+    response.cookies.set("token", token, { 
+      httpOnly: true, 
+      path: "/",
+      maxAge: 60 * 60 * 24 
     })
 
     return response
-
   } catch (error) {
-    console.error('Login Error:', error)
-    return NextResponse.json({ message: 'เกิดข้อผิดพลาดที่เซิร์ฟเวอร์' }, { status: 500 })
+    console.error("Login Error:", error)
+    return NextResponse.json(
+      { message: "เกิดข้อผิดพลาดจากเซิร์ฟเวอร์" }, 
+      { status: 500 }
+    )
   }
 }

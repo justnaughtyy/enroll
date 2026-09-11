@@ -1,99 +1,80 @@
 import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcrypt'
 
 const prisma = new PrismaClient()
 
 async function main() {
-  // เข้ารหัสผ่านว่า "password123" สำหรับนักศึกษาทุกคน
-  const hashedPassword = await bcrypt.hash('password123', 10)
+  console.log('กำลังล้างข้อมูลเก่า...')
+  // ลบข้อมูลเก่าทิ้งทั้งหมดเรียงตามลำดับเพื่อป้องกัน Error เรื่อง Relation
+  await prisma.enrollment.deleteMany()
+  await prisma.cartItem.deleteMany()
+  await prisma.course.deleteMany()
+  await prisma.user.deleteMany()
 
-  // 1. สร้างนักศึกษา 2 คน
-  const student1 = await prisma.student.upsert({
-    where: { studentId: '66011234' },
-    update: {},
-    create: {
-      studentId: '66011234',
+  console.log('กำลังสร้างข้อมูลใหม่...')
+  // เข้ารหัสผ่าน "123456" สำหรับใช้กับทุก User เพื่อง่ายต่อการเทส
+  const hashedPassword = await bcrypt.hash('123456', 10)
+
+  // 1. สร้างข้อมูล Admin
+  const admin = await prisma.user.create({
+    data: {
+      username: 'admin01',
       password: hashedPassword,
-      firstName: 'สมชาย',
-      lastName: 'ใจดี',
-      faculty: 'วิทยาศาสตร์และเทคโนโลยี', 
+      name: 'ผู้ดูแลระบบ สูงสุด',
+      role: 'admin',
     },
   })
 
-  const student2 = await prisma.student.upsert({
-    where: { studentId: '66011235' },
-    update: {},
-    create: {
-      studentId: '66011235',
+  // 2. สร้างข้อมูล Teacher
+  const teacher = await prisma.user.create({
+    data: {
+      username: 'teacher01',
       password: hashedPassword,
-      firstName: 'สมหญิง',
-      lastName: 'เรียนเก่ง',
-      faculty: 'วิทยาศาสตร์และเทคโนโลยี',
+      name: 'อ.สมพงษ์ สอนดี',
+      role: 'teacher',
     },
   })
 
-  // 3. เพิ่มนักศึกษาคนที่ 3
-  const student3 = await prisma.student.upsert({
-    where: { studentId: '66011236' },
-    update: {},
-    create: {
-      studentId: '66011236',
+  // 3. สร้างข้อมูล Student
+  const student = await prisma.user.create({
+    data: {
+      username: '66011234',
       password: hashedPassword,
-      firstName: 'สมศักดิ์',
-      lastName: 'ตั้งใจ',
-      faculty: 'วิทยาศาสตร์และเทคโนโลยี',
+      name: 'สมชาย รักเรียน',
+      role: 'student',
     },
   })
 
-  // 2. สร้างรายวิชา 3 วิชา (จงใจให้มีวิชาที่เวลาชนกันและที่นั่งเต็ม)
-  const course1 = await prisma.course.upsert({
-    where: { courseCode: 'CSI101' },
-    update: {},
-    create: {
-      courseCode: 'CSI101',
-      courseName: 'Web Development',
+  // 4. สร้างข้อมูลรายวิชา (Course) และมอบหมายให้อาจารย์ที่เพิ่งสร้าง
+  await prisma.course.create({
+    data: {
+      courseCode: 'CS101',
+      courseName: 'วิทยาการคอมพิวเตอร์เบื้องต้น',
       credits: 3,
-      instructor: 'ดร. สมปอง',
-      scheduleDay: 'Monday',
-      startTime: '09:00',
-      endTime: '12:00',
-      capacity: 30, 
+      capacity: 30,
+      teacherId: teacher.id, // ✅ ผูกวิชานี้กับอาจารย์สมพงษ์
+      term: 1,
+      year: 2566,
     },
   })
 
-  const course2 = await prisma.course.upsert({
-    where: { courseCode: 'CSI102' },
-    update: {},
-    create: {
-      courseCode: 'CSI102',
-      courseName: 'Database Systems',
+  await prisma.course.create({
+    data: {
+      courseCode: 'ENG101',
+      courseName: 'ภาษาอังกฤษเพื่อการสื่อสาร',
       credits: 3,
-      instructor: 'ผศ. สมศรี',
-      scheduleDay: 'Monday', 
-      startTime: '10:00', // เวลาชนกับ CSI101 
-      endTime: '13:00',
-      capacity: 2, // ที่นั่งน้อย เพื่อทดสอบเวลาเต็ม
-    },
-  })
-  
-  const course3 = await prisma.course.upsert({
-    where: { courseCode: 'GEN201' },
-    update: {},
-    create: {
-      courseCode: 'GEN201',
-      courseName: 'English for Communication',
-      credits: 3,
-      instructor: 'อ. จอห์น',
-      scheduleDay: 'Wednesday', 
-      startTime: '13:00',
-      endTime: '16:00',
       capacity: 40,
+      teacherId: teacher.id, // ✅ ผูกวิชานี้กับอาจารย์สมพงษ์
+      term: 1,
+      year: 2566,
     },
   })
 
-  
-
-  console.log('Mock Data created successfully!')
+  console.log('✅ จำลองข้อมูล (Mock Data) สำเร็จแล้ว!')
+  console.log('--- ข้อมูลสำหรับใช้ Login เทสระบบ ---')
+  console.log('👉 แอดมิน: username: admin01 | รหัสผ่าน: 123456')
+  console.log('👉 อาจารย์: username: teacher01 | รหัสผ่าน: 123456')
+  console.log('👉 นักศึกษา: username: 66011234 | รหัสผ่าน: 123456')
 }
 
 main()

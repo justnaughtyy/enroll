@@ -3,54 +3,74 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "mysql" // หรือแก้เป็นโปรไวเดอร์ที่คุณใช้ เช่น postgresql
   url      = env("DATABASE_URL")
 }
 
-model Student {
-  id          String       @id @default(uuid())
-  studentId   String       @unique 
-  password    String       
-  firstName   String
-  lastName    String
-  faculty     String       
-  enrollments Enrollment[]
-  cartItems   CartItem[]
+// 1. สร้าง Enum สำหรับกำหนดสิทธิ์ผู้ใช้งาน
+enum Role {
+  admin
+  teacher
+  student
+}
+
+// 2. ปรับจากตาราง Student เป็น User เพื่อใช้ร่วมกันทุก Role
+model User {
+  id        String   @id @default(uuid())
+  // เปลี่ยนชื่อจาก studentId เป็น username เพื่อให้ครอบคลุมทั้งรหัสนศ.และรหัสอาจารย์
+  username  String   @unique 
+  password  String
+  name      String
+  role      Role     @default(student) // ค่าเริ่มต้นคือ student
+  
+  // ความสัมพันธ์ (Relations)
+  enrollments   Enrollment[]
+  cartItems     CartItem[]
+  
+  // สำหรับ Role: teacher (วิชาที่อาจารย์คนนี้สอน)
+  coursesTaught Course[]     @relation("TeacherCourses")
 }
 
 model Course {
-  id           String       @id @default(uuid())
-  courseCode   String       @unique 
-  courseName   String       
-  credits      Int          
-  instructor   String       
-  scheduleDay  String       
-  startTime    String       
-  endTime      String       
-  capacity     Int          
-  enrolled     Int          @default(0) 
-  enrollments  Enrollment[]
+  id          String   @id @default(uuid())
+  courseCode  String   @unique
+  courseName  String
+  credits     Int
+  capacity    Int
+  
+  // --- ฟิลด์ที่เพิ่มใหม่สำหรับ Phase 2 ---
+  teacherId   String?  // ใส่ ? (Optional) เผื่อวิชานี้ยังไม่ได้กำหนดอาจารย์ผู้สอน
+  teacher     User?    @relation("TeacherCourses", fields: [teacherId], references: [id])
+  term        Int      @default(1)
+  year        Int      @default(2566)
+  // ---------------------------------
+  
+  enrollments Enrollment[]
   cartItems   CartItem[]
+  isOpen    Boolean  @default(true)
+  schedule  String   @default("ยังไม่กำหนดเวลา")
 }
 
 model Enrollment {
-  id         String   @id @default(uuid())
-  studentId  String
-  courseId   String
-  status     String   @default("PENDING") 
+  id        String   @id @default(uuid())
+  userId    String   // เปลี่ยนจาก studentId เป็น userId เพื่อเชื่อมกับตาราง User
+  courseId  String
   
-  student    Student  @relation(fields: [studentId], references: [id])
-  course     Course   @relation(fields: [courseId], references: [id])
+  // --- ฟิลด์ที่เพิ่มใหม่สำหรับ Phase 2 ---
+  grade     String?  // เช่น A, B+, C (ใส่ ? เพราะตอนลงทะเบียนแรกๆ จะยังไม่มีเกรด)
+  term      Int      @default(1)
+  year      Int      @default(2566)
+  // ---------------------------------
 
-  createdAt  DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  course    Course   @relation(fields: [courseId], references: [id])
 }
 
 model CartItem {
-  id        String   @id @default(cuid())
-  studentId String
+  id        String   @id @default(uuid())
+  userId    String   // เปลี่ยนจาก studentId เป็น userId
   courseId  String
-  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  @@unique([studentId, courseId])
+  
+  user      User     @relation(fields: [userId], references: [id])
+  course    Course   @relation(fields: [courseId], references: [id])
 }
