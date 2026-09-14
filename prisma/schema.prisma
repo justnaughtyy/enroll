@@ -22,6 +22,9 @@ model User {
   password  String
   name      String
   role      Role     @default(student) // ค่าเริ่มต้นคือ student
+  faculty         String?  // คณะ 
+  major           String?  // สาขาวิชา
+  studentStatus   String?  @default("ปกติ")
   
   // ความสัมพันธ์ (Relations)
   enrollments   Enrollment[]

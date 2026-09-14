@@ -39,8 +39,8 @@ export default function AdminSidebar() {
       `}>
         {/* โลโก้ */}
         <div className="h-16 flex items-center gap-3 px-6 bg-slate-950/50 border-b border-slate-800 md:pl-6 pl-14">
-          <div className="relative w-8 h-8 rounded-md overflow-hidden bg-white">
-            <Image src="/psrubw.jpg" alt="Logo" fill className="object-contain p-1" />
+          <div className="relative w-16 h-16 rounded-md overflow-hidden">
+            <Image src="/adminicon.png" alt="Logo" fill className="object-contain p-1" />
           </div>
           <span className="text-white font-bold tracking-wide">Admin Panel</span>
         </div>

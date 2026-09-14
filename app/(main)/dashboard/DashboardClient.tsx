@@ -119,6 +119,7 @@ export default function DashboardClient({ initialEnrollments }: { initialEnrollm
                 <th className="px-6 py-4 font-medium">ภาคเรียน</th>
                 <th className="px-6 py-4 font-medium">รหัสวิชา</th>
                 <th className="px-6 py-4 font-medium">ชื่อวิชา</th>
+                <th className="px-6 py-4 font-medium">วัน-เวลาเรียน</th>
                 <th className="px-6 py-4 font-medium text-center">หน่วยกิต</th>
                 <th className="px-6 py-4 font-medium text-center">ผลการเรียน (Grade)</th>
               </tr>
@@ -147,6 +148,7 @@ export default function DashboardClient({ initialEnrollments }: { initialEnrollm
                       <td className="px-6 py-4 text-slate-500">{en.course.term}/{en.course.year}</td>
                       <td className="px-6 py-4 font-semibold text-slate-900">{en.course.courseCode}</td>
                       <td className="px-6 py-4">{en.course.courseName}</td>
+                      <td className="px-6 py-4 text-slate-600 whitespace-nowrap">{en.course.schedule}</td>
                       <td className="px-6 py-4 text-center">{en.course.credits}</td>
                       <td className="px-6 py-4 text-center">
                         {en.grade ? (

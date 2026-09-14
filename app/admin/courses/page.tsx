@@ -41,6 +41,7 @@ export default async function AdminCoursesPage() {
             <tr>
               <th className="px-6 py-4 font-medium">รหัสวิชา</th>
               <th className="px-6 py-4 font-medium">ชื่อวิชา</th>
+              <th className="px-6 py-4 font-medium">เวลาเรียน</th>
               <th className="px-6 py-4 font-medium text-center">หน่วยกิต</th>
               <th className="px-6 py-4 font-medium text-center">รับ (คน)</th>
               <th className="px-6 py-4 font-medium">อาจารย์ผู้สอน</th>
@@ -68,6 +69,9 @@ export default async function AdminCoursesPage() {
                     {course.courseCode}
                   </td>
                   <td className="px-6 py-4">{course.courseName}</td>
+                  <td className="px-6 py-4 text-slate-600 whitespace-nowrap">
+                    {course.schedule}
+                  </td>
                   <td className="px-6 py-4 text-center">{course.credits}</td>
                   <td className="px-6 py-4 text-center">{course.capacity}</td>
                   <td className="px-6 py-4">

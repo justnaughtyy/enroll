@@ -16,7 +16,7 @@ async function main() {
   const hashedPassword = await bcrypt.hash('123456', 10)
 
   // 1. สร้างข้อมูล Admin
-  const admin = await prisma.user.create({
+  await prisma.user.create({
     data: {
       username: 'admin01',
       password: hashedPassword,
@@ -25,8 +25,8 @@ async function main() {
     },
   })
 
-  // 2. สร้างข้อมูล Teacher
-  const teacher = await prisma.user.create({
+  // 2. สร้างข้อมูล Teacher (2 ท่าน)
+  const teacher1 = await prisma.user.create({
     data: {
       username: 'teacher01',
       password: hashedPassword,
@@ -35,26 +35,78 @@ async function main() {
     },
   })
 
-  // 3. สร้างข้อมูล Student
-  const student = await prisma.user.create({
+  const teacher2 = await prisma.user.create({
+    data: {
+      username: 'teacher02',
+      password: hashedPassword,
+      name: 'อ.สมหญิง ใจดี',
+      role: 'teacher',
+    },
+  })
+
+  // 3. สร้างข้อมูล Student (3 คน พร้อมข้อมูลคณะ สาขา สถานะ)
+  const student1 = await prisma.user.create({
     data: {
       username: '66011234',
       password: hashedPassword,
       name: 'สมชาย รักเรียน',
       role: 'student',
+      faculty: 'วิทยาศาสตร์และเทคโนโลยี',
+      major: 'วิทยาการคอมพิวเตอร์',
+      studentStatus: 'ปกติ',
     },
   })
 
-  // 4. สร้างข้อมูลรายวิชา (Course) และมอบหมายให้อาจารย์ที่เพิ่งสร้าง
+  await prisma.user.create({
+    data: {
+      username: '66011235',
+      password: hashedPassword,
+      name: 'สมหญิง ขยันอ่าน',
+      role: 'student',
+      faculty: 'วิทยาศาสตร์และเทคโนโลยี',
+      major: 'เทคโนโลยีสารสนเทศ',
+      studentStatus: 'ปกติ',
+    },
+  })
+
+  await prisma.user.create({
+    data: {
+      username: '66011236',
+      password: hashedPassword,
+      name: 'สมศักดิ์ พักก่อน',
+      role: 'student',
+      faculty: 'มนุษยศาสตร์และสังคมศาสตร์',
+      major: 'ภาษาอังกฤษ',
+      studentStatus: 'รักษาสถานภาพ',
+    },
+  })
+
+  // 4. สร้างข้อมูลรายวิชา (Course)
   await prisma.course.create({
     data: {
       courseCode: 'CS101',
       courseName: 'วิทยาการคอมพิวเตอร์เบื้องต้น',
       credits: 3,
       capacity: 30,
-      teacherId: teacher.id, // ✅ ผูกวิชานี้กับอาจารย์สมพงษ์
+      teacherId: teacher1.id,
+      schedule: 'จันทร์ 09:00 - 12:00', // ✅ เพิ่มเวลาเรียน
       term: 1,
       year: 2566,
+      isOpen: true,
+    },
+  })
+
+  await prisma.course.create({
+    data: {
+      courseCode: 'CS102',
+      courseName: 'การเขียนโปรแกรมเว็บเบื้องต้น',
+      credits: 3,
+      capacity: 30,
+      teacherId: teacher1.id,
+      schedule: 'พุธ 13:00 - 16:00',
+      term: 1,
+      year: 2566,
+      isOpen: true,
     },
   })
 
@@ -64,17 +116,59 @@ async function main() {
       courseName: 'ภาษาอังกฤษเพื่อการสื่อสาร',
       credits: 3,
       capacity: 40,
-      teacherId: teacher.id, // ✅ ผูกวิชานี้กับอาจารย์สมพงษ์
+      teacherId: teacher2.id,
+      schedule: 'จันทร์ 10:00 - 13:00', // 🚨 จงใจตั้งให้ชนกับ CS101 เพื่อไว้เทสระบบ!
       term: 1,
       year: 2566,
+      isOpen: true,
     },
   })
 
+  await prisma.course.create({
+    data: {
+      courseCode: 'MATH101',
+      courseName: 'แคลคูลัส 1',
+      credits: 3,
+      capacity: 40,
+      teacherId: teacher2.id,
+      schedule: 'อังคาร 09:00 - 12:00',
+      term: 1,
+      year: 2566,
+      isOpen: true,
+    },
+  })
+
+  await prisma.course.create({
+    data: {
+      courseCode: 'GEN101',
+      courseName: 'การใช้ชีวิตในสังคม',
+      credits: 2,
+      capacity: 1, // 🚨 จงใจรับแค่ 1 คน เพื่อเอาไว้เทสว่าวิชาเต็มแล้วกดไม่ได้
+      teacherId: teacher2.id,
+      schedule: 'ศุกร์ 09:00 - 11:00',
+      term: 1,
+      year: 2566,
+      isOpen: true,
+    },
+  })
+
+  // 5. ทดลองให้นักศึกษา 1 คน ลงทะเบียนไปแล้ว 1 วิชา (เพื่อให้ Dashboard แอดมินมีข้อมูลคนลงทะเบียน)
+  const mathCourse = await prisma.course.findFirst({ where: { courseCode: 'MATH101' } })
+  if (mathCourse) {
+    await prisma.enrollment.create({
+      data: {
+        userId: student1.id,
+        courseId: mathCourse.id,
+        grade: null, // ยังไม่มีเกรด
+      }
+    })
+  }
+
   console.log('✅ จำลองข้อมูล (Mock Data) สำเร็จแล้ว!')
-  console.log('--- ข้อมูลสำหรับใช้ Login เทสระบบ ---')
-  console.log('👉 แอดมิน: username: admin01 | รหัสผ่าน: 123456')
-  console.log('👉 อาจารย์: username: teacher01 | รหัสผ่าน: 123456')
-  console.log('👉 นักศึกษา: username: 66011234 | รหัสผ่าน: 123456')
+  console.log('--- ข้อมูลสำหรับใช้ Login เทสระบบ (รหัสผ่าน: 123456 ทั้งหมด) ---')
+  console.log('👉 แอดมิน: username: admin01')
+  console.log('👉 อาจารย์: username: teacher01 หรือ teacher02')
+  console.log('👉 นักศึกษา: username: 66011234, 66011235, หรือ 66011236')
 }
 
 main()

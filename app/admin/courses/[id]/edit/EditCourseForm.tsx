@@ -16,12 +16,38 @@ export default function EditCourseForm({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+  let defaultDay = "จันทร์";
+  let defaultStartTime = "09:00";
+  let defaultEndTime = "12:00";
+
+  if (course.schedule && course.schedule !== "ยังไม่กำหนดเวลา") {
+    const match = course.schedule.match(
+      /^([^\s]+)\s+([0-9]{2}:[0-9]{2})\s*-\s*([0-9]{2}:[0-9]{2})$/,
+    );
+    if (match) {
+      defaultDay = match[1];
+      defaultStartTime = match[2];
+      defaultEndTime = match[3];
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
+
+    if (data.startTime >= data.endTime) {
+      toast.error("เวลาเลิกเรียนต้องมากกว่าเวลาเริ่มเรียน")
+      setLoading(false)
+      return // เบรกการทำงาน ไม่ให้ส่ง API
+    }
+
+    data.schedule = `${data.day} ${data.startTime} - ${data.endTime}`;
+    delete data.day;
+    delete data.startTime;
+    delete data.endTime;
 
     try {
       // เรียก API ด้วย Method PUT สำหรับการอัปเดต
@@ -131,20 +157,51 @@ export default function EditCourseForm({
         </select>
       </div>
 
-      {/* ช่องสำหรับกรอกเวลาเรียน */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-slate-700">
-          เวลาเรียน (วันและเวลา)
-        </label>
-        <input
-          type="text"
-          name="schedule"
-          // ถ้าเป็นหน้า Edit ให้ใช้ defaultValue={course.schedule}
-          defaultValue="ยังไม่กำหนดเวลา"
-          placeholder="เช่น จ. 09:00 - 12:00"
-          required
-          className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
-        />
+      {/* ช่องสำหรับแก้ไขเวลาเรียน */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-2">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">
+            วันที่เรียน
+          </label>
+          <select
+            name="day"
+            required
+            defaultValue={defaultDay}
+            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
+          >
+            <option value="จันทร์">จันทร์</option>
+            <option value="อังคาร">อังคาร</option>
+            <option value="พุธ">พุธ</option>
+            <option value="พฤหัสบดี">พฤหัสบดี</option>
+            <option value="ศุกร์">ศุกร์</option>
+            <option value="เสาร์">เสาร์</option>
+            <option value="อาทิตย์">อาทิตย์</option>
+          </select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">
+            เวลาเริ่มเรียน
+          </label>
+          <input
+            type="time"
+            name="startTime"
+            required
+            defaultValue={defaultStartTime}
+            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-700">
+            เวลาเลิกเรียน
+          </label>
+          <input
+            type="time"
+            name="endTime"
+            required
+            defaultValue={defaultEndTime}
+            className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          />
+        </div>
       </div>
 
       {/* ช่องสำหรับเลือกสถานะ เปิด/ปิด */}

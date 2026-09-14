@@ -6,7 +6,21 @@ import { Button } from "@/components/ui/button"
 import { Trash2, CheckCircle } from "lucide-react"
 import { toast } from "sonner"
 
-// ปุ่มลบทีละวิชา
+// ✅ นำเข้า AlertDialog จาก shadcn/ui
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+
+// ==========================================
+// 1. ปุ่มลบทีละวิชา (ไม่มีแจ้งเตือน เพราะเป็นการกดลบจากตะกร้าเฉยๆ)
+// ==========================================
 export function RemoveCartBtn({ cartItemId }: { cartItemId: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -33,14 +47,15 @@ export function RemoveCartBtn({ cartItemId }: { cartItemId: string }) {
   )
 }
 
-// ปุ่มยืนยันการลงทะเบียนทั้งหมด
+// ==========================================
+// 2. ปุ่มยืนยันการลงทะเบียนทั้งหมด (ใช้ AlertDialog)
+// ==========================================
 export function ConfirmEnrollmentBtn() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [isOpen, setIsOpen] = useState(false) // ✅ State คุม Modal
 
-  const handleConfirm = async () => {
-    if (!window.confirm("คุณแน่ใจหรือไม่ว่าต้องการยืนยันการลงทะเบียนเรียน?")) return
-
+  const executeEnrollment = async () => {
     setLoading(true)
     try {
       const res = await fetch("/api/student/enroll", { method: "POST" })
@@ -51,6 +66,7 @@ export function ConfirmEnrollmentBtn() {
       toast.success("ลงทะเบียนเรียนสำเร็จ!")
       router.push("/dashboard") // กลับไปหน้า Dashboard ดูผลการเรียน
       router.refresh()
+      setIsOpen(false) // ปิด Modal
     } catch (err: any) {
       toast.error(err.message || "เกิดข้อผิดพลาด")
     } finally {
@@ -59,9 +75,47 @@ export function ConfirmEnrollmentBtn() {
   }
 
   return (
-    <Button onClick={handleConfirm} disabled={loading} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white gap-2 shadow-md">
-      <CheckCircle className="w-5 h-5" />
-      {loading ? "กำลังดำเนินการ..." : "ยืนยันการลงทะเบียนเรียน"}
-    </Button>
+    <>
+      {/* ปุ่มหลักในหน้าตะกร้า (เปิด Modal แทน) */}
+      <Button 
+        onClick={() => setIsOpen(true)} 
+        disabled={loading} 
+        className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white gap-2 shadow-md"
+      >
+        <CheckCircle className="w-5 h-5" />
+        {loading ? "กำลังดำเนินการ..." : "ยืนยันการลงทะเบียนเรียน"}
+      </Button>
+
+      {/* AlertDialog แจ้งเตือนก่อนบันทึก */}
+      <AlertDialog 
+        open={isOpen} 
+        onOpenChange={(open) => {
+          if (!loading) setIsOpen(open)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการลงทะเบียนเรียน?</AlertDialogTitle>
+            <AlertDialogDescription>
+              กรุณาตรวจสอบรายวิชา เวลาเรียน และหน่วยกิตให้ถูกต้อง <br/>
+              เมื่อกดยืนยันแล้ว ระบบจะบันทึกผลการลงทะเบียนของคุณทันที
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loading}>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault() 
+                executeEnrollment()
+              }}
+              disabled={loading}
+              className="bg-green-600 hover:bg-green-700 text-white" // ✅ ปุ่มยืนยันสีเขียว
+            >
+              {loading ? "กำลังดำเนินการ..." : "ยืนยันการลงทะเบียน"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

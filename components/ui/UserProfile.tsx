@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Link from "next/link"
 
 export default function UserProfile({ name, role }: { name: string, role: string }) {
   const router = useRouter()
@@ -58,10 +59,12 @@ export default function UserProfile({ name, role }: { name: string, role: string
         <DropdownMenuSeparator />
         
         <DropdownMenuGroup>
+          <Link href="/profile">
           <DropdownMenuItem className="cursor-pointer">
             <User className="mr-2 h-4 w-4" />
             <span>โปรไฟล์ของฉัน</span>
           </DropdownMenuItem>
+          </Link>
         </DropdownMenuGroup>
         
         <DropdownMenuSeparator />

@@ -4,16 +4,26 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
-import { toast } from "sonner" // หรือใช้ไลบรารี Alert ที่คุณมี
+import { toast } from "sonner"
+
+// ✅ นำเข้า AlertDialog จาก shadcn/ui
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export default function DeleteCourseBtn({ id, name }: { id: string, name: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [isOpen, setIsOpen] = useState(false) // ✅ State คุมการเปิด/ปิด Modal
 
-  const handleDelete = async () => {
-    // มีแจ้งเตือน Confirm ก่อนลบเพื่อความปลอดภัย
-    if (!window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบวิชา "${name}" ?`)) return
-
+  const executeDelete = async () => {
     setLoading(true)
     try {
       const res = await fetch(`/api/admin/courses/${id}`, {
@@ -26,6 +36,7 @@ export default function DeleteCourseBtn({ id, name }: { id: string, name: string
 
       toast.success("ลบรายวิชาสำเร็จ!")
       router.refresh() // สั่งให้รีเฟรชตารางข้อมูลใหม่
+      setIsOpen(false) // ✅ ปิด Modal เมื่อลบสำเร็จ
     } catch (err: any) {
       toast.error(err.message || "เกิดข้อผิดพลาดในการลบ")
     } finally {
@@ -34,15 +45,52 @@ export default function DeleteCourseBtn({ id, name }: { id: string, name: string
   }
 
   return (
-    <Button 
-      variant="ghost" 
-      size="icon" 
-      onClick={handleDelete}
-      disabled={loading}
-      className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
-      title="ลบรายวิชา"
-    >
-      <Trash2 className="w-4 h-4" />
-    </Button>
+    <>
+      {/* ปุ่มถังขยะสำหรับกดเปิด Modal */}
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={() => setIsOpen(true)}
+        disabled={loading}
+        className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
+        title="ลบรายวิชา"
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
+
+      {/* AlertDialog ที่จะเด้งขึ้นมา */}
+      <AlertDialog 
+        open={isOpen} 
+        onOpenChange={(open) => {
+          // ป้องกันการกดปิด (คลิกพื้นหลัง) ตอนที่กำลังโหลด API
+          if (!loading) setIsOpen(open)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการลบรายวิชา?</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณแน่ใจหรือไม่ว่าต้องการลบวิชา <span className="font-bold text-slate-800">"{name}"</span> ? <br/>
+              <span className="text-red-500 mt-1 inline-block">
+                (ข้อมูลการลงทะเบียนของนักศึกษาในรายวิชานี้จะถูกยกเลิกด้วย และไม่สามารถกู้คืนได้)
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loading}>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault() // ป้องกัน Modal ปิดทันทีก่อนเรียก API
+                executeDelete()
+              }}
+              disabled={loading}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {loading ? "กำลังลบ..." : "ยืนยันการลบ"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
